@@ -29,7 +29,7 @@ func (s *Storage) Close() {
 		log.Fatal("Failed to close connection to DB", err)
 	}
 
-	sqlDB.Close()
+	_ = sqlDB.Close()
 }
 
 func (s Storage) SaveDiary(login, date, project, task, description string, timeHours float64) (models.Diary, error) {
@@ -43,7 +43,9 @@ func (s Storage) SaveDiary(login, date, project, task, description string, timeH
 	}
 	fmt.Printf("SaveDiary\n %+v", diary)
 	fmt.Printf("login ")
+
 	err := s.DB.Create(&diary).Error
+
 	if err != nil {
 		return diary, fmt.Errorf("Failed to create diary: %w", err)
 	}

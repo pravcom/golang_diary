@@ -8,6 +8,21 @@ import (
 	"app-diary/internal/models"
 )
 
+type SaveErr string
+
+const (
+	ErrLoginIsEmpty     = SaveErr("fill: Login")
+	ErrDateIsEmpty      = SaveErr("fill: Date")
+	ErrProjectIsEmpty   = SaveErr("fill: Project")
+	ErrTaskIsEmpty      = SaveErr("fill: Task")
+	ErrTimeHoursIsEmpty = SaveErr("fill: Time")
+	ErrBadMethod        = SaveErr("Method %s is no available")
+)
+
+func (e SaveErr) Error() string {
+	return string(e)
+}
+
 type SaverDiary interface {
 	SaveDiary(login, date, project, task, description string, timeHours float64) (models.Diary, error)
 }
@@ -24,7 +39,7 @@ func SaveDiary(creater SaverDiary) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
-			fmt.Fprintf(w, "Метод %s не поддерживается", r.Method)
+			fmt.Fprintf(w, ErrBadMethod.Error(), r.Method)
 			return
 		}
 
@@ -39,6 +54,31 @@ func SaveDiary(creater SaverDiary) http.HandlerFunc {
 		}
 
 		fmt.Println(diary)
+
+		if diary.Login == "" {
+			http.Error(w, ErrLoginIsEmpty.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if diary.Date == "" {
+			http.Error(w, ErrDateIsEmpty.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if diary.Project == "" {
+			http.Error(w, ErrProjectIsEmpty.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if diary.Task == "" {
+			http.Error(w, ErrTaskIsEmpty.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if diary.TimeHours == 0.0 {
+			http.Error(w, ErrTimeHoursIsEmpty.Error(), http.StatusBadRequest)
+			return
+		}
 
 		diary, err = creater.SaveDiary(diary.Login, diary.Date, diary.Project, diary.Task, diary.Description, diary.TimeHours)
 		if err != nil {
@@ -55,7 +95,7 @@ func GetDiary(getter GetterDiary) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
-			fmt.Fprintf(w, "Метод %s не поддерживается", r.Method)
+			fmt.Fprintf(w, ErrBadMethod.Error(), r.Method)
 			return
 		}
 
@@ -82,7 +122,7 @@ func DeleteDiary(deleter DeleterDiary) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
 			w.WriteHeader(http.StatusMethodNotAllowed)
-			fmt.Fprintf(w, "Метод %s не поддерживается", r.Method)
+			fmt.Fprintf(w, ErrBadMethod.Error(), r.Method)
 			return
 		}
 
