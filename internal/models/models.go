@@ -9,3 +9,9 @@ type Diary struct {
 	Description string  `json:"description"`
 	TimeHours   float64 `json:"time_hours"`
 }
+
+type Users struct {
+	ID       uint64 `json:"id" gorm:"primary_key"`
+	Login    string `json:"login" gorm:"index"`
+	Password string `json:"password"`
+}
